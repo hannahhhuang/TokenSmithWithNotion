@@ -21,6 +21,7 @@ def _init_worker(model_path: str, n_ctx: int, n_threads: int):
     _worker_model = Llama(
         model_path=model_path,
         n_ctx=n_ctx,
+        n_batch=512, # Explicitly allocate batch capacity
         n_threads=n_threads,
         embedding=True,
         verbose=False,
@@ -67,6 +68,7 @@ class SentenceTransformer:
         self.model = Llama(
             model_path=model_path,
             n_ctx=n_ctx,
+            n_batch=512, # Explicitly allocate batch capacity
             n_threads=n_threads,
             embedding=True,
             verbose=True,
@@ -87,7 +89,7 @@ class SentenceTransformer:
 
     def encode(self, 
            texts: Union[str, List[str]], 
-           batch_size: int = 16,  # Adjusted for 4B model
+           batch_size: int = 1,  # Set to 1 to prevent llama_decode n_seq_max errors
            normalize: bool = False,
            show_progress_bar: bool = False,
            **kwargs) -> np.ndarray:

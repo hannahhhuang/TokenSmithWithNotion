@@ -1,7 +1,7 @@
 import os
+import re
 from pathlib import Path
 from notion_client import Client
-from notion2md.exporter.block import StringExporter
 
 
 def get_page_title(notion, page_id):
@@ -17,6 +17,156 @@ def get_page_title(notion, page_id):
         print(f"Could not retrieve title for {page_id}: {e}")
     return "Untitled"
 
+def parse_rich_text(rich_text_array):
+    """Helper to parse Notion rich text into Markdown."""
+    if not rich_text_array:
+        return ""
+    
+    parsed = ""
+    for rt in rich_text_array:
+        text = rt.get("plain_text", "")
+        annotations = rt.get("annotations", {})
+        href = rt.get("href")
+        
+        if annotations.get("code"):
+            text = f"`{text}`"
+        if annotations.get("bold"):
+            text = f"**{text}**"
+        if annotations.get("italic"):
+            text = f"*{text}*"
+        if annotations.get("strikethrough"):
+            text = f"~~{text}~~"
+        if annotations.get("underline"):
+            text = f"<u>{text}</u>"
+            
+        if href:
+            text = f"{text}"
+            
+        parsed += text
+    return parsed
+
+def get_all_blocks(notion, block_id):
+    """Recursively fetch all blocks for a given parent."""
+    blocks = []
+    has_more = True
+    next_cursor = None
+    
+    while has_more:
+        kwargs = {"block_id": block_id, "page_size": 100}
+        if next_cursor:
+            kwargs["start_cursor"] = next_cursor
+            
+        response = notion.blocks.children.list(**kwargs)
+        blocks.extend(response.get("results", []))
+        has_more = response.get("has_more", False)
+        next_cursor = response.get("next_cursor")
+        
+    return blocks
+
+def blocks_to_markdown(notion, blocks, indent_level=0):
+    """Convert Notion blocks to a Markdown string."""
+    md_lines = []
+    list_number = 1
+    
+    for i, block in enumerate(blocks):
+        b_type = block["type"]
+        b_data = block.get(b_type, {})
+        
+        indent = "  " * indent_level
+        
+        # Reset list number if the previous block wasn't a numbered list
+        if i > 0 and blocks[i-1]["type"] != "numbered_list_item" and b_type == "numbered_list_item":
+            list_number = 1
+            
+        if b_type == "paragraph":
+            text = parse_rich_text(b_data.get("rich_text", []))
+            if text.strip() or indent_level == 0:
+                md_lines.append(f"{indent}{text}\n")
+            
+        elif b_type == "heading_1":
+            text = parse_rich_text(b_data.get("rich_text", []))
+            md_lines.append(f"{indent}# {text}\n")
+            
+        elif b_type == "heading_2":
+            text = parse_rich_text(b_data.get("rich_text", []))
+            md_lines.append(f"{indent}## {text}\n")
+            
+        elif b_type == "heading_3":
+            text = parse_rich_text(b_data.get("rich_text", []))
+            md_lines.append(f"{indent}### {text}\n")
+            
+        elif b_type == "bulleted_list_item":
+            text = parse_rich_text(b_data.get("rich_text", []))
+            md_lines.append(f"{indent}- {text}")
+            
+        elif b_type == "numbered_list_item":
+            text = parse_rich_text(b_data.get("rich_text", []))
+            md_lines.append(f"{indent}{list_number}. {text}")
+            list_number += 1
+            
+        elif b_type == "to_do":
+            text = parse_rich_text(b_data.get("rich_text", []))
+            checked = "x" if b_data.get("checked") else " "
+            md_lines.append(f"{indent}- [{checked}] {text}")
+            
+        elif b_type == "toggle":
+            text = parse_rich_text(b_data.get("rich_text", []))
+            md_lines.append(f"{indent}<details><summary>{text}</summary>")
+            
+        elif b_type == "code":
+            text = parse_rich_text(b_data.get("rich_text", []))
+            lang = b_data.get("language", "")
+            md_lines.append(f"{indent}```{lang}\n{text}\n{indent}```\n")
+            
+        elif b_type == "quote":
+            text = parse_rich_text(b_data.get("rich_text", []))
+            quote_text = "\n".join([f"{indent}> {line}" for line in text.split("\n")])
+            md_lines.append(f"{quote_text}\n")
+            
+        elif b_type == "callout":
+            text = parse_rich_text(b_data.get("rich_text", []))
+            icon = b_data.get("icon", {}).get("emoji", "💡")
+            md_lines.append(f"{indent}> {icon} **Callout:** {text}\n")
+            
+        elif b_type == "divider":
+            md_lines.append(f"{indent}---\n")
+            
+        elif b_type == "image":
+            img_type = b_data.get("type", "file")
+            url = b_data.get(img_type, {}).get("url", "")
+            caption = parse_rich_text(b_data.get("caption", []))
+            md_lines.append(f"{indent}![{caption}]({url})\n")
+            
+        elif b_type in ["bookmark", "link_preview"]:
+            url = b_data.get("url", "")
+            md_lines.append(f"{indent}{url}\n")
+            
+        elif b_type == "equation":
+            expression = b_data.get("expression", "")
+            md_lines.append(f"{indent}$$\n{expression}\n{indent}$$\n")
+            
+        elif b_type == "table_row":
+            cells = b_data.get("cells", [])
+            cell_texts = [parse_rich_text(cell) for cell in cells]
+            row = f"{indent}| " + " | ".join(cell_texts) + " |"
+            md_lines.append(row)
+            if i == 0:
+                sep = f"{indent}|" + "|".join(["---" for _ in cells]) + "|"
+                md_lines.append(sep)
+            
+        # Process children if any
+        if block.get("has_children") and b_type != "child_page":
+            child_blocks = get_all_blocks(notion, block["id"])
+            child_md = blocks_to_markdown(notion, child_blocks, indent_level + 1)
+            if child_md:
+                md_lines.append(child_md)
+            
+        if b_type == "toggle":
+            md_lines.append(f"{indent}</details>\n")
+            
+    result = "\n".join(md_lines)
+    result = re.sub(r'\n{3,}', '\n\n', result)
+    return result.strip()
 
 def process_page(notion, page_id, export_dir, page_title=None, recursive=True):
     """Exports a page and optionally searches its blocks for child pages."""
@@ -33,18 +183,11 @@ def process_page(notion, page_id, export_dir, page_title=None, recursive=True):
 
    # 1. Convert the current Page to Markdown
     try:
-        md_content = StringExporter(block_id=page_id).export()
-
-        # --- NEW SCRUBBING LOGIC ---
-        # 1. Remove the annoying hardcoded library comments
-        md_content = md_content.replace(
-            "[//]: # (child_page is not supported)", "")
-        # 2. Clean up any awkward double-spacing or stray breaks left behind
-        md_content = md_content.replace("\n\n\n<br/>\n\n\n", "\n\n")
-        md_content = md_content.replace("\n\n\n", "\n\n")
+        blocks = get_all_blocks(notion, page_id)
+        md_content = blocks_to_markdown(notion, blocks)
 
         with open(filepath, "w", encoding="utf-8") as f:
-            f.write(md_content.strip())  # .strip() removes trailing whitespace
+            f.write(md_content)
     except Exception as e:
         print(f"Failed to export {page_id}: {e}")
 
