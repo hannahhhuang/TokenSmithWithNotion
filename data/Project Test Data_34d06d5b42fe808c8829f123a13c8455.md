@@ -1,0 +1,12 @@
+**Welcome to CS4423: Database Systems**
+
+This workspace contains synthesized lecture materials, personal annotations, and supplementary content for core database architecture concepts.
+
+**Directory Overview:**
+
+- [[Concurrency Control]]
+- [[Storage, Indexing, and Recovery]]
+
+Anatomy of Database System:
+
+![](https://prod-files-secure.s3.us-west-2.amazonaws.com/01952468-085c-4847-b899-7c729465b5fa/9cbfa2bc-1540-4d11-9950-52190acbd815/image.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=ASIAZI2LB466RWLG47P7%2F20260425%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20260425T202035Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENL%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQD4L0zMzZrhD5a%2BE2Gvx7RgIrmm39mBZGEF9yjpytAy1gIhAPBRfB2LywBJSa70uCgBR8Xj%2FXQH6V%2Bwv73Qb9PwEkLWKogECJr%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQABoMNjM3NDIzMTgzODA1IgwS0lBr3ZCMsIu9NnQq3AMpJheI6ISNg%2FfaL7kgoxRA0BBeECdT5gQpGkP78djwkIJCmE5nzx06hFg1eGcFR7ZWuX5ZV9%2F%2FUWSh3E1qsgXbUz6EDEgYqzNqjrDLtIcJUJO8KTbHFEd4c9aAJNF6xoz5U4KSaQxXws6mzuasxtZLcswTmATApnljoOO4gmJAFUvU4qrgLE3pWSMRYpcRkUfYXJ8FnLhMVnxWhLrgo5qLxNnPxIXk1UkfasH4Rz07ZU3jhRpBtnfwGPcUvwUEZRnQZjmRRHVPn0veiZrLptQYuXqOW6i18sAVUhtD1tmK8pUyif7FZojRk2yeRQOPJA0hQIFnfaqeB5ZQqaG6HRtelpj2%2BIkPK1PHcMWbGE1I8PeqnMZz1uQ0%2BJWwQlbn4la926xqoDS0rKL%2FUP27nfrEmDx0W196M7AV3TNfn37azd88Bn5HaRYtirZhXUFfLJgAA2A8%2F%2Bd5NxWIjlIUqLnQt1NXnE9wQEhoqWvlqFF47qzpaz9y%2B2R%2FtprjrN%2FdWwOFo%2F6D6nSk8P0q0POGHr5lRNQSWc6xAMOnf%2FT7dYpL%2FJS7Hx4pfUWxWTai9rdwGZA7r82tkogv3zkqiyAkFhKSb%2BFQ9Z3Ee4EGCIFOhc59FrPeGBMAeqUA0qxRiDDe8LPPBjqkAfrfaQEMpBkHNSsVe3ryyRLiwm3HdbWTf03hDMpGevl2gWPkk%2BhY7HjeBtSa2EH15HYjOKG8ilLHf7FzYvMMNp19asGmdmZ6Wp6fjhEacG6DqBS86r0zoXfhwBOmjcI36hy8mch4Kzyg%2FuN1mIFOPuiv1a6KZsGIimcAAhIXJtMXrIoq%2BI3jXpI%2Bi4S32kF%2BdEbOBIYUNxBfxi9Tqsto5PrlUwFv&X-Amz-Signature=e1690778bb31c0d72e2c7e5c7112be191ec10ad1c8ef20bd9b4b650e4f1776df&X-Amz-SignedHeaders=host&x-amz-checksum-mode=ENABLED&x-id=GetObject)
